@@ -1,6 +1,8 @@
+<img 
+     align="right" width="200px" alt="gentoo logo"
+     src="images/200px-gentoo-logo-dark.svg.png"
+/>
 # Gentoo install guide
-
-![gentoo_logo](images/200px-gentoo-logo-dark.svg.png)
 
 ## Contents
 
