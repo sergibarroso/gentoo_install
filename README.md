@@ -81,7 +81,7 @@ The name Gentoo comes from the penguin species, which are known to be the fastes
 
 I've been using Gentoo since 2002 (20+ years already :astonished: ), and what I like most about Gentoo is:
 
-* Is fun
+* It's fun
 * The possibility of getting everything under control
 * Deep customization
 One learns **a lot** about GNU/Linux from using it.
@@ -104,11 +104,11 @@ The first thing we need to install our Gentoo is a live-cd environment with UEFI
 
 ~~I like [systemrescuecd](http://www.system-rescue-cd.org) because is Gentoo-based and has UEFI vars enabled. You can download it here [bootable usb](https://www.system-rescue-cd.org/Sysresccd-manual-en_How_to_install_SystemRescueCd_on_an_USB-stick).~~
 
-As [systemrescuecd](http://www.system-rescue-cd.org) is now based on Arch, we will use the Gentoo LiveGUI USB Image. You can find it in the [Gentoo downloads section](https://www.gentoo.org/downloads/). Scroll to `Advanced choices and other architectures` and get the `Boot media` called ` LiveGUI USB Image`.
+As [systemrescuecd](http://www.system-rescue-cd.org) is now based on Arch, we will use the Gentoo LiveGUI USB Image. You can find it in the [Gentoo downloads section](https://www.gentoo.org/downloads/). Scroll down to `Advanced choices and other architectures` and download the `Boot media` called ` LiveGUI USB Image`.
 
 To make sure that we boot on UEFI mode, by running:
 
-```shell
+```sh
 efivar -l
 ```
 
@@ -122,18 +122,24 @@ I suggest you use whatever you're familiar with, I will show you the process usi
 | :-------------------------------------------------------------------------- |
 | Once you run the first `gdisk` command, you will enter the `gdisk` console. |
 
-If you use SATA disk, run:
+Go ahead and set the following environment variables:
+```sh
+# bash/zsh
+export GENTOO_DISK="the disk you want to install gentoo on"
+export GENTOO_ROOT="/mnt/gentoo"
+export GENTOO_ROOT_PART="$GENTOO_DISK"p2 # Change p2 to the partition you're using as your rootfs
+export GENTOO_BOOT_PART="$GENTOO_DISK"p1
 
-```shell
-gdisk /dev/sda
+# fish
+set -x GENTOO_DISK "the disk you want to install gentoo on"
+set -x GENTOO_ROOT "/mnt/gentoo"
+set -x GENTOO_ROOT_PART "$GENTOO_DISK"p2 # Change p2 to the partition you're using as your rootfs
+set -x GENTOO_BOOT_PART "$GENTOO_DISK"p1
 ```
 
-I will continue using NVME, but if you use a SATA disk, from now on, replace everything appearance of `/dev/nvme0n1` or `/dev/nvme0n1p1`, for `/dev/sda` or `dev/sda1` :thumbsup:
-
-If you use `NVME` disk, then run:
-
-```shell
-gdisk /dev/nvme0n1
+Enter `gdisk`:
+```sh
+gdisk "$GENTOO_DISK"
 ```
 
 Create a new GUID partition table and destroy everything on the disk:
@@ -168,17 +174,8 @@ Y
 
 Partitions should look something like this:
 
-```shell
-gdisk -l /dev/sda
-Number  Start (sector)    End (sector)  Size       Code  Name
-   1            2048         1050623   512.0 MiB   EF00  EFI
-   2         1050624       500118158   238.0 GiB   8300  LVM
-```
-
-Or, in the case of NVME:
-
-```shell
-gdisk -l /dev/nvme0n1
+```sh
+gdisk -l $GENTOO_DISK
 Number  Start (sector)    End (sector)  Size       Code  Name
    1            2048         1050623   512.0 MiB   EF00  EFI
    2         1050624       500118158   238.0 GiB   8300  LVM
@@ -227,7 +224,7 @@ Choose the option with better overall performance. For example, in the output ab
 When you have yours chosen, then proceed by running:
 
 ```shell
-cryptsetup -v --cipher aes-xts-plain64 --key-size 256 -y luksFormat /dev/nvme0n1p2
+cryptsetup -v --cipher aes-xts-plain64 --key-size 256 -y luksFormat $GENTOO_ROOT_PART
 ```
 
 The command will ask you to confirm with a `YES`. After a second, you should see something like `Command successful`.
@@ -237,7 +234,7 @@ Then we need to open (decrypt) the container to start creating the volumes insid
 When we open the container, we need to specify a label name to identify the container once opened. As you can see, in the command below, I've used **cryptcontainer**, be creative :stuck_out_tongue_winking_eye:
 
 ```shell
-cryptsetup open --type luks /dev/nvme0n1p2 cryptcontainer
+cryptsetup open --type luks $GENTOO_ROOT_PART cryptcontainer
 ```
 
 And... we're done with the encryption. Now, volume time! :sound:
@@ -358,7 +355,7 @@ You can read as much as you want [here](https://wiki.gentoo.org/wiki/Filesystem)
 Let's create our three main filesystems volumes, one FAT32 for UEFI (:fearful: yes, I know, but this is how UEFI works), and then our main `ext4` filesystems. If you've created more volumes, remember to make a filesystem for all of them:
 
 ```shell
-mkfs.vfat -F32 /dev/nvme0n1p1
+mkfs.vfat -F32 $GENTOO_BOOT_PART
 mkfs.ext4 /dev/mapper/vg0-root
 mkfs.ext4 /dev/mapper/vg0-home
 ```
@@ -368,12 +365,12 @@ mkfs.ext4 /dev/mapper/vg0-home
 With our logical volumes created and our filesystems ready, let's mount our partitions to start building our Gentoo system:
 
 ```shell
-mkdir -p /mnt/gentoo
-mount /dev/mapper/vg0-root /mnt/gentoo
-mkdir -p /mnt/gentoo/boot
-mount /dev/nvme0n1p1 /mnt/gentoo/boot
-mkdir /mnt/gentoo/home
-mount /dev/mapper/vg0-home /mnt/gentoo/home
+mkdir -p $GENTOO_ROOT
+mount /dev/mapper/vg0-root $GENTOO_ROOT
+mkdir -p $GENTOO_ROOT/boot
+mount $GENTOO_BOOT_PART $GENTOO_ROOT/boot
+mkdir $GENTOO_ROOT/home
+mount /dev/mapper/vg0-home $GENTOO_ROOT/home
 ```
 
 ## Installing the Gentoo base system
@@ -407,13 +404,13 @@ We're going to grab that **base-binary-semi-working-non-bootable-environment**, 
 We first download the tarball:
 
 ```shell
-curl -o /mnt/gentoo/stage3-amd64-systemd.tar.xz -L https://bouncer.gentoo.org/fetch/root/all/releases/amd64/autobuilds/20230307T201702Z/stage3-amd64-systemd-20230307T201702Z.tar.xz
+curl -o $GENTOO_ROOT/stage3-amd64-systemd.tar.xz -L https://bouncer.gentoo.org/fetch/root/all/releases/amd64/autobuilds/20230307T201702Z/stage3-amd64-systemd-20230307T201702Z.tar.xz
 ```
 
 And we unpack it in our root directory that is mounted in `/mnt/gentoo` directory:
 
 ```shell
-cd /mnt/gentoo/
+cd $GENTOO_ROOT
 tar xvf stage3-*.tar.xz --xattrs
 ```
 
@@ -446,7 +443,7 @@ Before setting it, it's worth double checking the value with what is defined in 
 Now, edit this file:
 
 ```shell
-nano -w /mnt/gentoo/etc/portage/make.conf
+nano -w $GENTOO_ROOT/etc/portage/make.conf
 ```
 
 And set the `-march=tigerlake` (or the type you got) at the beginning of `COMMON_FLAGS` to something like:
@@ -474,7 +471,7 @@ Additionally, to keep the system responsive when compiling, the build system sup
 With all that we've said in this section, let's edit the `make.conf` file again:
 
 ```shell
-nano /mnt/gentoo/etc/portage/make.conf
+nano $GENTOO_ROOT/etc/portage/make.conf
 ```
 
 And this time, we set `MAKEOPTS`:
@@ -490,7 +487,7 @@ Gentoo uses the closes mirror to sync the packages index, so setting the best mi
 :warning: Make sure that you have Internet access from your live-cd:
 
 ```shell
-mirrorselect -D -s4 -o >> /mnt/gentoo/etc/portage/make.conf
+mirrorselect -D -s4 -o >> $GENTOO_ROOT/etc/portage/make.conf
 ```
 
 You should now have an entry for `GENTOO_MIRRORS` in `/mnt/gentoo/etc/portage/make.conf`.
@@ -500,8 +497,8 @@ You should now have an entry for `GENTOO_MIRRORS` in `/mnt/gentoo/etc/portage/ma
 Copy the Gentoo repository configuration file from Portage package:
 
 ```shell
-mkdir -p /mnt/gentoo/etc/portage/repos.conf
-cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
+mkdir -p $GENTOO_ROOT/etc/portage/repos.conf
+cp $GENTOO_ROOT/usr/share/portage/config/repos.conf $GENTOO_ROOT/etc/portage/repos.conf/gentoo.conf
 ```
 
 ### Copy DNS info
@@ -509,7 +506,7 @@ cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos
 Copy the DNS information from your working live-cd environment into the new system to make sure that we will be able to resolve domain names once we switch to it:
 
 ```shell
-cp --dereference /etc/resolv.conf /mnt/gentoo/etc/
+cp --dereference /etc/resolv.conf $GENTOO_ROOT/etc/
 ```
 
 ### Mounting the necessary filesystems
@@ -519,13 +516,13 @@ In addition to the LVM filesystem we created in our local disk, other pseudo-fil
 :warning: If you are setting an environment without `SystemD`, then you can skip the `--make-rslave` lines
 
 ```shell
-mount --types proc /proc /mnt/gentoo/proc
-mount --rbind /sys /mnt/gentoo/sys
-mount --make-rslave /mnt/gentoo/sys
-mount --rbind /dev /mnt/gentoo/dev
-mount --make-rslave /mnt/gentoo/dev
-mount --bind /run /mnt/gentoo/run
-mount --make-slave /mnt/gentoo/run
+mount --types proc /proc $GENTOO_ROOT/proc
+mount --rbind /sys $GENTOO_ROOT/sys
+mount --make-rslave $GENTOO_ROOT/sys
+mount --rbind /dev $GENTOO_ROOT/dev
+mount --make-rslave $GENTOO_ROOT/dev
+mount --bind /run $GENTOO_ROOT/run
+mount --make-slave $GENTOO_ROOT/run
 ```
 
 ### Entering the new environment
@@ -533,7 +530,7 @@ mount --make-slave /mnt/gentoo/run
 Chroot into the new environment:
 
 ```shell
-chroot /mnt/gentoo /bin/bash
+chroot $GENTOO_ROOT /bin/bash
 ```
 
 ```shell
