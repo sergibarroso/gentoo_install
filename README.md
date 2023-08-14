@@ -139,7 +139,7 @@ set -x GENTOO_BOOT_PART "$GENTOO_DISK"p1
 
 Enter `gdisk`:
 ```sh
-gdisk "$GENTOO_DISK"
+gdisk $GENTOO_DISK
 ```
 
 Create a new GUID partition table and destroy everything on the disk:
