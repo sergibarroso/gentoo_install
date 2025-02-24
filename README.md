@@ -669,10 +669,10 @@ emerge --ask app-portage/cpuid2cpuflags
 And then run it to get those values:
 
 ```shell
-cpuid2cpuflags
+echo "*/* $(cpuid2cpuflags)" > /etc/portage/package.use/00cpu-flags
 ```
 
-You should see an output like:
+You should see an output like this inside of /etc/portage/package.use/00cpu-flags:
 
 ```shell
 CPU_FLAGS_X86: aes avx avx2 avx512f avx512dq avx512cd avx512bw avx512vl avx512vbmi f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 ssse3
