@@ -407,7 +407,7 @@ We're going to grab that **base-binary-semi-working-non-bootable-environment**, 
 We first download the tarball:
 
 ```shell
-curl -o /mnt/gentoo/stage3-amd64-systemd.tar.xz -L https://bouncer.gentoo.org/fetch/root/all/releases/amd64/autobuilds/20230307T201702Z/stage3-amd64-systemd-20230307T201702Z.tar.xz
+curl -o /mnt/gentoo/stage3-amd64-systemd.tar.xz -L https://bouncer.gentoo.org/fetch/root/all/releases/amd64/autobuilds/current-stage3-amd64-systemd/stage3-amd64-systemd-20260125T170113Z.tar.xz
 ```
 
 And we unpack it in our root directory that is mounted in `/mnt/gentoo` directory:
