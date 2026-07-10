@@ -649,8 +649,8 @@ USE="10bit 12bit 256-color 7zip a-like-o aac aacs aalib acpi aio
      bash-completion boost branding caps contrib cpu cpudetection cpuid
      cpuinfo cpuload cryptsetup dbus efi64 gd gzip hardened hddtemp highlight
      highlighting imagemagick initramfs int64 ipv4 jemalloc jpeg json
-     kmod lm-sensors lvm lvm2create-initrd lz4 lzip lzma lzo lzo2 nano
-     nano-syntax networkmanager nss numa opencl opengl openssl python ssh
+     kmod lm-sensors lvm lz4 lzip lzma lzo lzo2 nano nano-syntax 
+     networkmanager nss numa opencl opengl openssl python ssh
      sslv2 sslv3 startup-notification tcmalloc threaded threads thunderbolt
      truetype udisks uefi unzip upower usb x264 x265 xfs xv zeroconf
      zsh-completion -cups"
@@ -826,7 +826,7 @@ You will probably see only one kernel on the list:
 
 ```shell
 Available kernel symlink targets:
-  [1]   linux-5.15.59-gentoo
+  [1]   linux-6.18.38-gentoo
 ```
 
 So we go with that:
@@ -944,7 +944,6 @@ nano -w /etc/lvm/lvm.conf
 ```
 
 ```shell
-use_lvmetad = 1
 issue_discards = 1
 volume_list = ["vg0"] # Our VG volume name, check with vgdisplay
 ```
