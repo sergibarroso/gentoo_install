@@ -602,13 +602,13 @@ Don't get scared by the list. You will most probably increase this once we finis
 
 We can find a description of all USE flags in `less /var/db/repos/gentoo/profiles/use.desc`.
 
-
 Additionally, the utility named `quse` from `portage-utils` package can tell us which package uses what USE flags.
 
 For example, if you want to know which packages use the `systemd` flag we simply need to run:
 
 ```shell
 quse systemd
+echo 'sys-apps/systemd boot' >> /etc/portage/package.use/systemd
 ```
 
 And you will have the list of packages affected by `systemd`.
